@@ -30,7 +30,7 @@ lio_sam:
   lidarMinRange: 1.0                          # default: 1.0, minimum lidar range to be used
   lidarMaxRange: 1000.0                       # default: 1000.0, maximum lidar range to be used
 
-  # IMU Settings
+  # IMU Settings 各个轴的bias都设置成相同的，可以用艾伦方差跑一下获得各个轴的bias
   imuAccNoise: 3.9939570888238808e-03
   imuGyrNoise: 1.5636343949698187e-03
   imuAccBiasN: 6.4356659353532566e-05

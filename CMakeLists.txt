@@ -5,6 +5,7 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "-std=c++14")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -pthread")
 
+#${catkin_INCLUDE_DIRS}、${catkin_LIBRARIES}、${catkin_EXPORTED_TARGETS}等变量是由catkin_package()生成的
 find_package(catkin REQUIRED COMPONENTS
   tf
   roscpp
@@ -50,6 +51,7 @@ generate_messages(
   sensor_msgs
 )
 
+#DEPENDS ... 外部依赖库 CATKIN_DEPENDS 内部依赖库
 catkin_package(
   INCLUDE_DIRS include
   DEPENDS PCL GTSAM
@@ -73,6 +75,7 @@ include_directories(
 	${GTSAM_INCLUDE_DIR}
 )
 
+#若find_package()找不到库，可以通过link_directories()指定库的路径，这里可以注释掉
 # link directories
 link_directories(
 	include

@@ -338,20 +338,6 @@ public:
         return thisPose6D;
     }
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
     bool saveMapService(lio_sam::save_mapRequest& req, lio_sam::save_mapResponse& res)
     {
       string saveMapDirectory;
@@ -488,16 +474,6 @@ public:
         downSizeFilterGlobalMapKeyFrames.filter(*globalMapKeyFramesDS);
         publishCloud(pubLaserCloudSurround, globalMapKeyFramesDS, timeLaserInfoStamp, odometryFrame);
     }
-
-
-
-
-
-
-
-
-
-
 
 
     void loopClosureThread()
@@ -772,15 +748,6 @@ public:
         markerArray.markers.push_back(markerEdge);
         pubLoopConstraintEdge.publish(markerArray);
     }
-
-
-
-
-
-
-
-    
-
 
 
     void updateInitialGuess()
@@ -1377,7 +1344,7 @@ public:
 
         return true;
     }
-
+ 
     void addOdomFactor()
     {
         if (cloudKeyPoses3D->points.empty())

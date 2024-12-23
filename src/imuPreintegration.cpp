@@ -212,13 +212,14 @@ public:
         pubImuOdometry = nh.advertise<nav_msgs::Odometry> (odomTopic+"_incremental", 2000);
 
         boost::shared_ptr<gtsam::PreintegrationParams> p = gtsam::PreintegrationParams::MakeSharedU(imuGravity);
+
         p->accelerometerCovariance  = gtsam::Matrix33::Identity(3,3) * pow(imuAccNoise, 2); // acc white noise in continuous
         p->gyroscopeCovariance      = gtsam::Matrix33::Identity(3,3) * pow(imuGyrNoise, 2); // gyro white noise in continuous
         p->integrationCovariance    = gtsam::Matrix33::Identity(3,3) * pow(1e-4, 2); // error committed in integrating position from velocities
         gtsam::imuBias::ConstantBias prior_imu_bias((gtsam::Vector(6) << 0, 0, 0, 0, 0, 0).finished());; // assume zero initial bias
 
         priorPoseNoise  = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished()); // rad,rad,rad,m, m, m
-        priorVelNoise   = gtsam::noiseModel::Isotropic::Sigma(3, 1e4); // m/s
+        priorVelNoise   = gtsam::noiseModel::Isotropic::Sigma(3, 1e4); // m/s why so large, because it can initialize the system while the car is driving.
         priorBiasNoise  = gtsam::noiseModel::Isotropic::Sigma(6, 1e-3); // 1e-2 ~ 1e-3 seems to be good
         correctionNoise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 0.05, 0.05, 0.05, 0.1, 0.1, 0.1).finished()); // rad,rad,rad,m, m, m
         correctionNoise2 = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1, 1, 1, 1, 1, 1).finished()); // rad,rad,rad,m, m, m
@@ -231,7 +232,9 @@ public:
     void resetOptimization()
     {
         gtsam::ISAM2Params optParameters;
+        //当变量的估计值发生变化，其变化量超过这个阈值时，相关因子会被重新线性化，默认就是0.1
         optParameters.relinearizeThreshold = 0.1;
+        //在多少次迭代后才进行一次重新线性化检查，默认10
         optParameters.relinearizeSkip = 1;
         optimizer = gtsam::ISAM2(optParameters);
 
@@ -251,6 +254,7 @@ public:
 
     void odometryHandler(const nav_msgs::Odometry::ConstPtr& odomMsg)
     {
+        //使用 std::lock_guard 自动管理锁
         std::lock_guard<std::mutex> lock(mtx);
 
         double currentCorrectionTime = ROS_TIME(odomMsg);
@@ -306,7 +310,6 @@ public:
             optimizer.update(graphFactors, graphValues);
             graphFactors.resize(0);
             graphValues.clear();
-
             imuIntegratorImu_->resetIntegrationAndSetBias(prevBias_);
             imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
             
@@ -398,6 +401,7 @@ public:
         // check optimization
         if (failureDetection(prevVel_, prevBias_))
         {
+            ROS_WARN("failure detection, reset params");
             resetParams();
             return;
         }
